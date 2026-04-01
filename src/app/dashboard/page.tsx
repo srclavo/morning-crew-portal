@@ -9,6 +9,15 @@ type Report = {
   created_at: string
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '_')
+    .replace(/^-+|-+$/g, '')
+}
+
 const agentMeta: Record<string, { name: string; role: string; schedule: string }> = {
   dario: { name: 'Dario', role: 'Inteligencia de mercado', schedule: '6 AM y 6 PM · L-V' },
   sofia: { name: 'Sofia', role: 'Chief of Staff', schedule: '8 AM · L-V' },
@@ -31,11 +40,24 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: reports } = await supabase
+  // Determine which client_id belongs to this user
+  const { data: clientConfig } = await supabase
+    .from('client_configs')
+    .select('company_name')
+    .eq('user_id', user.id)
+    .single()
+
+  const clientId = clientConfig ? slugify(clientConfig.company_name) : null
+
+  const reportsQuery = supabase
     .from('reports')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(20)
+
+  if (clientId) reportsQuery.eq('client_id', clientId)
+
+  const { data: reports } = await reportsQuery
 
   const lastRunByAgent = (reports ?? []).reduce<Record<string, string>>((acc, r) => {
     if (!acc[r.agent]) acc[r.agent] = r.created_at
@@ -50,7 +72,9 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="text-2xl font-bold">The Morning Crew</h1>
-            <p className="text-zinc-400 text-sm mt-1">{user.email}</p>
+            <p className="text-zinc-400 text-sm mt-1">
+              {clientConfig ? clientConfig.company_name : user.email}
+            </p>
           </div>
           <form action="/auth/signout" method="post">
             <button className="text-sm text-zinc-500 hover:text-white transition-colors">
@@ -101,9 +125,11 @@ export default async function DashboardPage() {
                       <span className="text-xs font-medium text-white capitalize">
                         {agentMeta[r.agent]?.name ?? r.agent}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
-                        {r.client_id}
-                      </span>
+                      {!clientId && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+                          {r.client_id}
+                        </span>
+                      )}
                     </div>
                     <span className="text-xs text-zinc-500">{timeAgo(r.created_at)}</span>
                   </div>
