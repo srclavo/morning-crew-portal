@@ -97,9 +97,14 @@ export default async function DashboardPage() {
               {reports.map((r: Report) => (
                 <div key={r.id} className="border border-zinc-800 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-white capitalize">
-                      {agentMeta[r.agent]?.name ?? r.agent}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-white capitalize">
+                        {agentMeta[r.agent]?.name ?? r.agent}
+                      </span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+                        {r.client_id}
+                      </span>
+                    </div>
                     <span className="text-xs text-zinc-500">{timeAgo(r.created_at)}</span>
                   </div>
                   <p className="text-zinc-400 text-xs leading-relaxed line-clamp-3">
