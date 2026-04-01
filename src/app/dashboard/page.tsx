@@ -28,7 +28,12 @@ const agentMeta: Record<string, { name: string; role: string; schedule: string }
 }
 
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ onboarded?: string }>
+}) {
+  const { onboarded } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -75,6 +80,17 @@ export default async function DashboardPage() {
             </button>
           </form>
         </div>
+
+        {/* Onboarding success banner */}
+        {onboarded && (
+          <div className="bg-emerald-950 border border-emerald-800 rounded-xl p-5 mb-8">
+            <p className="text-emerald-400 font-medium text-sm">✓ Tu equipo está siendo configurado</p>
+            <p className="text-emerald-700 text-xs mt-1">
+              Recibirás tu primer reporte de inteligencia hoy a las 6 PM o mañana a las 6 AM.
+              En unos minutos recibirás un mensaje de bienvenida en Telegram para confirmar que todo está conectado.
+            </p>
+          </div>
+        )}
 
         {/* Agent status grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
