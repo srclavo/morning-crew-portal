@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { Timestamp } from './Timestamp'
 
 type Report = {
   id: string
@@ -26,18 +27,6 @@ const agentMeta: Record<string, { name: string; role: string; schedule: string }
   neil:  { name: 'Neil',  role: 'SEO · Blog + GMB', schedule: '11 PM · L-V' },
 }
 
-const TZ = 'America/Monterrey'
-
-function formatTimestamp(dateStr: string) {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const opts = { timeZone: TZ }
-  const isToday = date.toLocaleDateString('es-MX', opts) === now.toLocaleDateString('es-MX', opts)
-  const time = date.toLocaleTimeString('es-MX', { ...opts, hour: '2-digit', minute: '2-digit', hour12: false })
-  if (isToday) return time
-  const day = date.toLocaleDateString('es-MX', { ...opts, day: 'numeric', month: 'short' })
-  return `${day} · ${time}`
-}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -106,7 +95,7 @@ export default async function DashboardPage() {
                 </div>
                 <p className="text-zinc-400 text-xs">{agent.schedule}</p>
                 {lastRun && (
-                  <p className="text-zinc-600 text-xs mt-1">Último: {formatTimestamp(lastRun)}</p>
+                  <p className="text-zinc-600 text-xs mt-1">Último: <Timestamp dateStr={lastRun} /></p>
                 )}
               </div>
             )
@@ -135,7 +124,7 @@ export default async function DashboardPage() {
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-zinc-500">{formatTimestamp(r.created_at)}</span>
+                    <span className="text-xs text-zinc-500"><Timestamp dateStr={r.created_at} /></span>
                   </div>
                   <p className="text-zinc-400 text-xs leading-relaxed line-clamp-3">
                     {r.content.slice(0, 300)}{r.content.length > 300 ? '…' : ''}
