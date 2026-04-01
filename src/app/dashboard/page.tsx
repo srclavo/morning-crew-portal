@@ -26,13 +26,16 @@ const agentMeta: Record<string, { name: string; role: string; schedule: string }
   neil:  { name: 'Neil',  role: 'SEO · Blog + GMB', schedule: '11 PM · L-V' },
 }
 
+const TZ = 'America/Monterrey'
+
 function formatTimestamp(dateStr: string) {
   const date = new Date(dateStr)
   const now = new Date()
-  const isToday = date.toDateString() === now.toDateString()
-  const time = date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false })
+  const opts = { timeZone: TZ }
+  const isToday = date.toLocaleDateString('es-MX', opts) === now.toLocaleDateString('es-MX', opts)
+  const time = date.toLocaleTimeString('es-MX', { ...opts, hour: '2-digit', minute: '2-digit', hour12: false })
   if (isToday) return time
-  const day = date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+  const day = date.toLocaleDateString('es-MX', { ...opts, day: 'numeric', month: 'short' })
   return `${day} · ${time}`
 }
 
