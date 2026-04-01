@@ -25,9 +25,11 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
-  const isPublicRoute = request.nextUrl.pathname === '/'
-  const isCallbackRoute = request.nextUrl.pathname.startsWith('/auth')
+  const path = request.nextUrl.pathname
+  const isAuthRoute = path.startsWith('/login')
+  const isPublicRoute = path === '/' || path.startsWith('/onboarding/pending')
+  const isCallbackRoute = path.startsWith('/auth')
+  const isOnboarding = path.startsWith('/onboarding')
 
   if (!user && !isAuthRoute && !isPublicRoute && !isCallbackRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
@@ -35,6 +37,19 @@ export async function proxy(request: NextRequest) {
 
   if (user && isAuthRoute && !isCallbackRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // Block onboarding for inactive users
+  if (user && isOnboarding && !path.startsWith('/onboarding/pending')) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('active')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.active) {
+      return NextResponse.redirect(new URL('/onboarding/pending', request.url))
+    }
   }
 
   return supabaseResponse
