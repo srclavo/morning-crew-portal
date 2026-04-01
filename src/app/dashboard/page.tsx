@@ -26,13 +26,14 @@ const agentMeta: Record<string, { name: string; role: string; schedule: string }
   neil:  { name: 'Neil',  role: 'SEO · Blog + GMB', schedule: '11 PM · L-V' },
 }
 
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const h = Math.floor(diff / 3600000)
-  const d = Math.floor(h / 24)
-  if (d > 0) return `hace ${d}d`
-  if (h > 0) return `hace ${h}h`
-  return 'hace un momento'
+function formatTimestamp(dateStr: string) {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const time = date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false })
+  if (isToday) return time
+  const day = date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+  return `${day} · ${time}`
 }
 
 export default async function DashboardPage() {
@@ -102,7 +103,7 @@ export default async function DashboardPage() {
                 </div>
                 <p className="text-zinc-400 text-xs">{agent.schedule}</p>
                 {lastRun && (
-                  <p className="text-zinc-600 text-xs mt-1">Último: {timeAgo(lastRun)}</p>
+                  <p className="text-zinc-600 text-xs mt-1">Último: {formatTimestamp(lastRun)}</p>
                 )}
               </div>
             )
@@ -131,7 +132,7 @@ export default async function DashboardPage() {
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-zinc-500">{timeAgo(r.created_at)}</span>
+                    <span className="text-xs text-zinc-500">{formatTimestamp(r.created_at)}</span>
                   </div>
                   <p className="text-zinc-400 text-xs leading-relaxed line-clamp-3">
                     {r.content.slice(0, 300)}{r.content.length > 300 ? '…' : ''}
